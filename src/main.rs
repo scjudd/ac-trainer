@@ -88,19 +88,16 @@ fn run_once(handle: proc::Handle) {
 
 fn main() {
     loop {
-        let pid;
-
-        loop {
-            pid = match proc::find("ac_client.exe") {
-                Some(pid) => pid,
+        let pid = loop {
+            match proc::find("ac_client.exe") {
+                Some(pid) => break pid,
                 None => {
                     eprintln!("Waiting for game to launch...");
                     std::thread::sleep(std::time::Duration::from_millis(1000));
                     continue;
                 }
-            };
-            break;
-        }
+            }
+        };
 
         let handle = proc::open(pid).expect("failed to open process");
 

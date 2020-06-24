@@ -2,7 +2,7 @@ mod entities;
 mod proc;
 mod winapi;
 
-pub fn read_player(handle: proc::Handle, addr: u32) -> entities::Player {
+fn read_player(handle: proc::Handle, addr: u32) -> entities::Player {
     let raw =
         proc::read(handle, addr, entities::PLAYER_SIZE).expect("failed to read player entity");
 

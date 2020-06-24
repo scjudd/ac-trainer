@@ -8,6 +8,7 @@
 #![allow(non_snake_case)]
 
 pub type c_char = i8;
+pub type c_short = i16;
 pub type c_int = i32;
 pub type c_long = i32;
 pub type c_ulong = u32;
@@ -21,6 +22,7 @@ pub type ULONG_PTR = usize;
 pub type LPDWORD = *mut DWORD;
 pub type LPVOID = *mut c_void;
 pub type LPCVOID = *const c_void;
+pub type SHORT = c_short;
 pub type SIZE_T = ULONG_PTR;
 pub type HANDLE = *mut c_void;
 pub type LPPROCESSENTRY32 = *mut PROCESSENTRY32;
@@ -34,6 +36,8 @@ pub const STANDARD_RIGHTS_REQUIRED: DWORD = 0x000F0000;
 pub const SYNCHRONIZE: DWORD = 0x00100000;
 
 pub const STILL_ACTIVE: DWORD = 259;
+
+pub const VK_CAPITAL: c_int = 0x14;
 
 #[repr(C)]
 pub struct PROCESSENTRY32 {
@@ -71,4 +75,5 @@ extern "system" {
         nSize: SIZE_T,
         lpNumberOfBytesWritten: *mut SIZE_T,
     ) -> BOOL;
+    pub fn GetKeyState(nVirtKey: c_int) -> SHORT;
 }

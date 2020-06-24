@@ -94,3 +94,24 @@ pub fn read(handle: Handle, addr: u32, size: usize) -> Result<Vec<u8>, String> {
 
     Ok(data)
 }
+
+pub fn write(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
+    let mut written: winapi::SIZE_T = 0;
+
+    unsafe {
+        let ok = winapi::WriteProcessMemory(
+            handle,
+            addr as winapi::LPVOID,
+            data as *const _ as winapi::LPCVOID,
+            data.len() as winapi::SIZE_T,
+            &mut written as *mut winapi::SIZE_T,
+        );
+
+        if ok == 0 {
+            let errno = winapi::GetLastError();
+            return Err(format!("WriteProcessMemory error: {}", errno));
+        }
+    }
+
+    Ok(())
+}

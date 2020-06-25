@@ -49,21 +49,21 @@ fn closest_living<'a>(me: &Player, players: &'a Vec<Player>) -> Option<&'a Playe
 }
 
 fn distance(src: &Player, dst: &Player) -> f32 {
-    let x = ((dst.x - src.x).powi(2) + (dst.y - src.y).powi(2)).sqrt();
-    let y = dst.z - src.z;
-    (x.powi(2) + y.powi(2)).sqrt()
+    let (x, y, z) = (dst.x - src.x, dst.y - src.y, dst.z - src.z);
+    let base = (x.powi(2) + y.powi(2)).sqrt();
+    (base.powi(2) + z.powi(2)).sqrt()
 }
 
 fn calc_angle(src: &Player, dst: &Player) -> Angle {
-    let mut yaw = (dst.y - src.y).atan2(dst.x - src.x).to_degrees();
-    yaw += 90.0;
-    if yaw <= f32::EPSILON {
+    let (x, y, z) = (dst.x - src.x, dst.y - src.y, dst.z - src.z);
+    let base = (x.powi(2) + y.powi(2)).sqrt();
+
+    let mut yaw = y.atan2(x).to_degrees() + 90.0;
+    if yaw <= 0.0 {
         yaw += 360.0;
     }
 
-    let x = ((dst.x - src.x).powi(2) + (dst.y - src.y).powi(2)).sqrt();
-    let y = dst.z - src.z;
-    let pitch = (y / x).atan().to_degrees();
+    let pitch = (z / base).atan().to_degrees();
 
     Angle { yaw, pitch }
 }

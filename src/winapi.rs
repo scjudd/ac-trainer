@@ -3,7 +3,6 @@
 //! This module should define only the needed set of bindings; it is not meant to be exhaustive.
 //! Most of the type aliases are borrowed from https://docs.rs/winapi/0.3.8/.
 
-#![allow(dead_code)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 

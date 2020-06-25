@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::winapi;
 
 pub type Pid = winapi::DWORD;
@@ -95,6 +93,7 @@ pub fn read(handle: Handle, addr: u32, size: usize) -> Result<Vec<u8>, String> {
     Ok(data)
 }
 
+/// Write memory to a remote process
 pub fn write(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
     let mut written: winapi::SIZE_T = 0;
 

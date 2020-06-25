@@ -3,37 +3,7 @@ mod entities;
 mod proc;
 mod winapi;
 
-fn print_header() {
-    println!("Name              Health  Armor  X           Y           Z");
-    println!("===================================================================");
-}
-
-fn print_player(player: &entities::Player) {
-    println!(
-        "{:16}  {:<4}    {:<4}   {:<10}  {:<10}  {:<10}",
-        player.name, player.health, player.armor, player.x, player.y, player.z,
-    );
-}
-
-fn run_once(handle: proc::Handle) {
-    print_header();
-
-    // The current player
-
-    let my_addr = unsafe { *(proc::read(handle, 0x50f4f4, 4).unwrap().as_ptr() as *const u32) };
-    let me = entities::Player::read(handle, my_addr);
-    print_player(&me);
-
-    // All other players
-
-    let players = entities::list(handle).expect("failed to read entity list");
-    for player in players {
-        print_player(&player);
-    }
-
-    println!("");
-    std::thread::sleep(std::time::Duration::from_millis(1000));
-}
+use entities::Player;
 
 fn main() {
     loop {
@@ -60,4 +30,32 @@ fn main() {
 
         eprintln!("Game closed.");
     }
+}
+
+fn run_once(handle: proc::Handle) {
+    print_header();
+
+    let my_addr = unsafe { *(proc::read(handle, 0x50f4f4, 4).unwrap().as_ptr() as *const u32) };
+    let me = Player::read(handle, my_addr);
+    print_player(&me);
+
+    let players = entities::player_list(handle).expect("failed to read player list");
+    for player in players {
+        print_player(&player);
+    }
+
+    println!("");
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+}
+
+fn print_header() {
+    println!("Name              Health  Armor  X           Y           Z");
+    println!("===================================================================");
+}
+
+fn print_player(player: &Player) {
+    println!(
+        "{:16}  {:<4}    {:<4}   {:<10}  {:<10}  {:<10}",
+        player.name, player.health, player.armor, player.x, player.y, player.z,
+    );
 }

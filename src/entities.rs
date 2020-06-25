@@ -1,31 +1,5 @@
 use crate::proc;
 
-pub fn list(handle: proc::Handle) -> Result<Vec<Player>, String> {
-    let list_addr = unsafe { *(proc::read(handle, 0x50f4f8, 4)?.as_ptr() as *const u32) };
-
-    let list_length =
-        unsafe { *(proc::read(handle, 0x50f500, 4)?.as_ptr() as *const u32) as usize };
-
-    let mut list = Vec::with_capacity(list_length);
-
-    for index in 0..list_length {
-        let entity_addr = unsafe {
-            *(proc::read(handle, list_addr + (index as u32 * 0x4), 4)?.as_ptr() as *const u32)
-        };
-
-        // When entities are removed, their entity list pointer is set to null, but the remaining
-        // entities are not moved.
-        if entity_addr == 0 {
-            continue;
-        }
-
-        let player = Player::read(handle, entity_addr);
-        list.push(player);
-    }
-
-    Ok(list)
-}
-
 pub struct Player {
     pub x: f32,
     pub y: f32,
@@ -83,4 +57,30 @@ impl Player {
             name,
         }
     }
+}
+
+pub fn player_list(handle: proc::Handle) -> Result<Vec<Player>, String> {
+    let list_addr = unsafe { *(proc::read(handle, 0x50f4f8, 4)?.as_ptr() as *const u32) };
+
+    let list_length =
+        unsafe { *(proc::read(handle, 0x50f500, 4)?.as_ptr() as *const u32) as usize };
+
+    let mut list = Vec::with_capacity(list_length);
+
+    for index in 0..list_length {
+        let entity_addr = unsafe {
+            *(proc::read(handle, list_addr + (index as u32 * 0x4), 4)?.as_ptr() as *const u32)
+        };
+
+        // When entities are removed, their entity list pointer is set to null, but the remaining
+        // entities are not moved.
+        if entity_addr == 0 {
+            continue;
+        }
+
+        let player = Player::read(handle, entity_addr);
+        list.push(player);
+    }
+
+    Ok(list)
 }

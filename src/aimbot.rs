@@ -30,6 +30,11 @@ fn run_once(handle: proc::Handle) {
     let my_addr = unsafe { *(proc::read(handle, 0x50f4f4, 4).unwrap().as_ptr() as *const u32) };
     let me = Player::read(handle, my_addr);
 
+    // Don't aim while dead: it's awkward.
+    if me.health <= 0 {
+        return;
+    }
+
     let players = entities::player_list(handle).expect("failed to read player list");
     if let Some(target_player) = closest_living(&me, &players) {
         let angle = calc_angle(&me, target_player);

@@ -1,4 +1,5 @@
 mod aimbot;
+mod code;
 mod entities;
 mod proc;
 mod winapi;
@@ -25,6 +26,12 @@ fn main() {
         aimbot::spawn_thread(pid);
 
         let handle = proc::open(pid).expect("failed to open process");
+
+        code::godmode()
+            .inject(handle)
+            .expect("failed to inject godmode hook")
+            .enable(handle)
+            .expect("failed to enable godmode hook");
 
         while proc::still_active(handle).expect("failed to check process exit code") {
             run_once(handle);

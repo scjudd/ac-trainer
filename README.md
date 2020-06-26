@@ -6,5 +6,6 @@ Currently, it will:
 
 * Print out each player's name, health, armor and position every second
 * If Caps Lock is active it will aim at the closest living player
+* Godmode
 
 This project was was undertaken in order to get better at Rust, to learn a little bit about game hacking, and to do _something_ with Windows for the first time in a long time. To maximize learning, it does not pull in any external dependencies.

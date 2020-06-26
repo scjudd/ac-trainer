@@ -18,6 +18,7 @@ pub type CHAR = c_char;
 pub type DWORD = c_ulong;
 pub type LONG = c_long;
 pub type ULONG_PTR = usize;
+pub type PDWORD = *mut DWORD;
 pub type LPDWORD = *mut DWORD;
 pub type LPVOID = *mut c_void;
 pub type LPCVOID = *const c_void;
@@ -37,6 +38,11 @@ pub const SYNCHRONIZE: DWORD = 0x00100000;
 pub const STILL_ACTIVE: DWORD = 259;
 
 pub const VK_CAPITAL: c_int = 0x14;
+
+pub const MEM_COMMIT: DWORD = 0x1000;
+pub const MEM_RESERVE: DWORD = 0x2000;
+
+pub const PAGE_EXECUTE_READWRITE: DWORD = 0x40;
 
 #[repr(C)]
 pub struct PROCESSENTRY32 {
@@ -75,4 +81,18 @@ extern "system" {
         lpNumberOfBytesWritten: *mut SIZE_T,
     ) -> BOOL;
     pub fn GetKeyState(nVirtKey: c_int) -> SHORT;
+    pub fn VirtualAllocEx(
+        hProcess: HANDLE,
+        lpAddress: LPVOID,
+        dwSize: SIZE_T,
+        flAllocationType: DWORD,
+        flProtect: DWORD,
+    ) -> LPVOID;
+    pub fn VirtualProtectEx(
+        hProcess: HANDLE,
+        lpAddress: LPVOID,
+        dwSize: SIZE_T,
+        flNewProtect: DWORD,
+        lpflOldProtect: PDWORD,
+    ) -> BOOL;
 }

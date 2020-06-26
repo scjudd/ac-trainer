@@ -5,6 +5,10 @@ mod winapi;
 
 use entities::Player;
 
+pub fn capslock_enabled() -> bool {
+    unsafe { winapi::GetKeyState(winapi::VK_CAPITAL) & 1 == 1 }
+}
+
 fn main() {
     loop {
         let pid = loop {

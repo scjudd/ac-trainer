@@ -1,6 +1,6 @@
+use crate::capslock_enabled;
 use crate::entities::{self, Player};
 use crate::proc;
-use crate::winapi;
 
 struct Angle {
     yaw: f32,
@@ -40,10 +40,6 @@ fn run_once(handle: proc::Handle) {
         let angle = calc_angle(&me, target_player);
         aim(handle, my_addr, &angle);
     }
-}
-
-fn capslock_enabled() -> bool {
-    unsafe { winapi::GetKeyState(winapi::VK_CAPITAL) & 1 == 1 }
 }
 
 fn closest_living<'a>(me: &Player, players: &'a Vec<Player>) -> Option<&'a Player> {

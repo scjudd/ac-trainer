@@ -33,6 +33,12 @@ fn main() {
             .enable(handle)
             .expect("failed to enable godmode hook");
 
+        code::unlimited_ammo()
+            .inject(handle)
+            .expect("failed to inject unlimited ammo hook")
+            .enable(handle)
+            .expect("failed to enable unlimited ammo hook");
+
         while proc::still_active(handle).expect("failed to check process exit code") {
             run_once(handle);
         }

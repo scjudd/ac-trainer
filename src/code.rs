@@ -24,6 +24,35 @@ pub fn godmode() -> InjectionSpec {
     }
 }
 
+pub fn unlimited_ammo() -> InjectionSpec {
+    InjectionSpec {
+        original_addr: 0x4637e9,
+        original_code: vec![
+            // 00000000 <originalcode>:
+            0xff, 0x0e, // dec [esi]
+            0x57, // push edi
+            0x8b, 0x7c, 0x24, 0x14, // mov [edi], [esp+0x14]
+        ],
+        new_code: vec![
+            // 00000000 <newcode>:
+            0x50, // push eax
+            0xa1, 0xf4, 0xf4, 0x50, 0x00, // mov eax, [0x50f4f4]
+            0x05, 0x50, 0x01, 0x00, 0x00, // add eax, 0x150
+            0x39, 0xc6, // cmp esi, eax
+            0x58, // pop eax
+            0x74, 0x02, // je 0x12 <originalcode+0x2>
+            // 00000010 <originalcode>:
+            0xff, 0x0e, // dec [esi]
+            // 00000012 <originalcode+0x2>:
+            0x57, // push edi
+            0x8b, 0x7c, 0x24, 0x14, // mov edi, [esp+0x14]
+            // 00000017 <return>:
+            0x00, 0x00, 0x00, 0x00, 0x00,
+        ],
+        return_offsets: vec![0x17],
+    }
+}
+
 pub struct InjectionSpec {
     original_addr: u32,
     original_code: Vec<u8>,

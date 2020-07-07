@@ -1,5 +1,6 @@
 use crate::proc;
 
+const NOP: u8 = 0x90;
 const JMP_LEN: usize = 5;
 
 pub fn godmode() -> InjectionSpec {
@@ -58,10 +59,9 @@ pub struct Injection {
 
 impl Injection {
     pub fn enable(&self, handle: proc::Handle) -> Result<(), String> {
-        let jmp_partial = jmp(self.original_addr, self.new_code_addr);
-        let mut jmp_code = vec![0x90; self.original_code.len()];
-        jmp_code[..JMP_LEN].clone_from_slice(&jmp_partial[..]);
-        proc::write_protected(handle, self.original_addr, &jmp_code[..])
+        let mut detour = vec![NOP; self.original_code.len()];
+        detour[..JMP_LEN].clone_from_slice(&jmp(self.original_addr, self.new_code_addr)[..]);
+        proc::write_protected(handle, self.original_addr, &detour[..])
     }
 
     pub fn disable(&self, handle: proc::Handle) -> Result<(), String> {

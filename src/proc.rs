@@ -1,3 +1,5 @@
+//! Safe abstractions over the Windows API for interacting with remote processes
+
 use crate::winapi;
 
 pub type Pid = winapi::DWORD;
@@ -115,6 +117,7 @@ pub fn write(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
+/// Write memory to a remote process, making sure to handle memory protection setting/resetting
 pub fn write_protected(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
     let mut old_protection: winapi::DWORD = 0;
 
@@ -153,6 +156,7 @@ pub fn write_protected(handle: Handle, addr: u32, data: &[u8]) -> Result<(), Str
     Ok(())
 }
 
+/// Allocate memory in a remote process
 pub fn alloc_ex(handle: Handle, len: usize) -> Result<u32, String> {
     let addr = unsafe {
         winapi::VirtualAllocEx(

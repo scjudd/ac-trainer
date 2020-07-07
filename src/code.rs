@@ -32,9 +32,6 @@ pub struct InjectionSpec {
 
 impl InjectionSpec {
     pub fn inject(self, handle: proc::Handle) -> Result<Injection, String> {
-        // TODO: check if original code in the process matches self.original_code before
-        // continuing
-
         let new_code_addr = proc::alloc_ex(handle, self.new_code.len())?;
 
         let mut new_code = self.new_code;

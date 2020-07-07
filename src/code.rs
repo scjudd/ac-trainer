@@ -21,10 +21,7 @@ pub fn godmode() -> InjectionSpec {
             0x29, 0x7b, 0x04, // sub [ebx+0x4],edi
             // 00000011 <originalcode+0x3>:
             0x8b, 0xc7, // mov eax, edi
-            // 00000013 <return>:
-            0x00, 0x00, 0x00, 0x00, 0x00,
         ],
-        return_offsets: vec![0x13],
     }
 }
 
@@ -32,7 +29,6 @@ pub struct InjectionSpec {
     original_addr: u32,
     original_code: Vec<u8>,
     new_code: Vec<u8>,
-    return_offsets: Vec<usize>,
 }
 
 impl InjectionSpec {
@@ -51,13 +47,12 @@ impl InjectionSpec {
         };
 
         let mut new_code = self.new_code;
-
-        for offset in &self.return_offsets {
-            new_code[*offset..*offset + JMP_LEN].clone_from_slice(&jmp(
-                new_code_addr + *offset as u32,
+        new_code.extend_from_slice(
+            &jmp(
+                new_code_addr + new_code.len() as u32,
                 self.original_addr + JMP_LEN as u32,
-            ));
-        }
+            )[..],
+        );
 
         proc::write(handle, new_code_addr, &new_code)?;
 

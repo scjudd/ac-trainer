@@ -114,3 +114,60 @@ pub fn write(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
 
     Ok(())
 }
+
+pub fn write_protected(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
+    let mut old_protection: winapi::DWORD = 0;
+
+    let ok = unsafe {
+        winapi::VirtualProtectEx(
+            handle,
+            addr as winapi::LPVOID,
+            data.len(),
+            winapi::PAGE_EXECUTE_READWRITE,
+            &mut old_protection as *mut _ as winapi::PDWORD,
+        )
+    };
+
+    if ok == 0 {
+        let errno = unsafe { winapi::GetLastError() };
+        return Err(format!("VirtualProtectEx error: {}", errno));
+    }
+
+    write(handle, addr, data)?;
+
+    let ok = unsafe {
+        winapi::VirtualProtectEx(
+            handle,
+            addr as winapi::LPVOID,
+            data.len(),
+            old_protection,
+            &mut old_protection as *mut _ as winapi::PDWORD,
+        )
+    };
+
+    if ok == 0 {
+        let errno = unsafe { winapi::GetLastError() };
+        return Err(format!("VirtualProtectEx error: {}", errno));
+    }
+
+    Ok(())
+}
+
+pub fn alloc_ex(handle: Handle, len: usize) -> Result<u32, String> {
+    let addr = unsafe {
+        winapi::VirtualAllocEx(
+            handle,
+            std::ptr::null_mut(),
+            len,
+            winapi::MEM_COMMIT | winapi::MEM_RESERVE,
+            winapi::PAGE_EXECUTE_READWRITE,
+        )
+    };
+
+    if addr == std::ptr::null_mut() {
+        let errno = unsafe { winapi::GetLastError() };
+        return Err(format!("VirtualAllocEx error: {}", errno));
+    }
+
+    Ok(addr as u32)
+}

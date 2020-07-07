@@ -1,5 +1,4 @@
 use crate::proc;
-use crate::winapi;
 
 const JMP_LEN: usize = 5;
 
@@ -36,15 +35,7 @@ impl InjectionSpec {
         // TODO: check if original code in the process matches self.original_code before
         // continuing
 
-        let new_code_addr = unsafe {
-            winapi::VirtualAllocEx(
-                handle,
-                std::ptr::null_mut(),
-                self.new_code.len(),
-                winapi::MEM_COMMIT | winapi::MEM_RESERVE,
-                winapi::PAGE_EXECUTE_READWRITE,
-            ) as u32
-        };
+        let new_code_addr = proc::alloc_ex(handle, self.new_code.len())?;
 
         let mut new_code = self.new_code;
         new_code.extend_from_slice(
@@ -75,42 +66,12 @@ impl Injection {
         let jmp_partial = jmp(self.original_addr, self.new_code_addr);
         let mut jmp_code = vec![0x90; self.original_code.len()];
         jmp_code[..JMP_LEN].clone_from_slice(&jmp_partial[..]);
-        write_code(handle, self.original_addr, &jmp_code[..])
+        proc::write_protected(handle, self.original_addr, &jmp_code[..])
     }
 
     pub fn disable(&self, handle: proc::Handle) -> Result<(), String> {
-        write_code(handle, self.original_addr, &self.original_code)
+        proc::write_protected(handle, self.original_addr, &self.original_code)
     }
-}
-
-fn write_code(handle: proc::Handle, addr: u32, code: &[u8]) -> Result<(), String> {
-    // TODO: check for VirtualProtectEx errors
-
-    let mut old_protection: winapi::DWORD = 0;
-
-    unsafe {
-        winapi::VirtualProtectEx(
-            handle,
-            addr as winapi::LPVOID,
-            code.len(),
-            winapi::PAGE_EXECUTE_READWRITE,
-            &mut old_protection as *mut _ as winapi::PDWORD,
-        );
-    }
-
-    proc::write(handle, addr, &code)?;
-
-    unsafe {
-        winapi::VirtualProtectEx(
-            handle,
-            addr as winapi::LPVOID,
-            code.len(),
-            old_protection,
-            std::ptr::null_mut(),
-        );
-    }
-
-    Ok(())
 }
 
 fn jmp(src: u32, dst: u32) -> [u8; JMP_LEN] {

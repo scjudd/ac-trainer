@@ -6,7 +6,7 @@ pub fn godmode() -> InjectionSpec {
     InjectionSpec {
         original_addr: 0x429d1f,
         original_code: vec![
-            0x29, 0x7b, 0x04, // sub [ebx+0x4],edi
+            0x29, 0x7b, 0x04, // sub [ebx+0x4], edi
             0x8b, 0xc7, // mov eax, edi
         ],
         new_code: vec![
@@ -15,7 +15,7 @@ pub fn godmode() -> InjectionSpec {
             0x39, 0xc3, // cmp ebx, eax
             0x74, 0x03, // je 0x11 <originalcode+0x3>
             // 0000000e <originalcode>:
-            0x29, 0x7b, 0x04, // sub [ebx+0x4],edi
+            0x29, 0x7b, 0x04, // sub [ebx+0x4], edi
             // 00000011 <originalcode+0x3>:
             0x8b, 0xc7, // mov eax, edi
         ],

@@ -5,6 +5,46 @@ use crate::winapi;
 pub type Pid = winapi::DWORD;
 pub type Handle = winapi::HANDLE;
 
+/// Read a type from the memory of a remote process
+pub trait Read {
+    fn read(handle: Handle, addr: u32) -> Result<Self, String>
+    where
+        Self: Sized;
+}
+
+impl Read for u32 {
+    fn read(handle: Handle, addr: u32) -> Result<u32, String> {
+        let raw = read(handle, addr, std::mem::size_of::<u32>())?;
+        unsafe { Ok(*(raw.as_ptr() as *const u32)) }
+    }
+}
+
+impl Read for i32 {
+    fn read(handle: Handle, addr: u32) -> Result<i32, String> {
+        let raw = read(handle, addr, std::mem::size_of::<i32>())?;
+        unsafe { Ok(*(raw.as_ptr() as *const i32)) }
+    }
+}
+
+impl Read for f32 {
+    fn read(handle: Handle, addr: u32) -> Result<f32, String> {
+        let raw = read(handle, addr, std::mem::size_of::<f32>())?;
+        unsafe { Ok(*(raw.as_ptr() as *const f32)) }
+    }
+}
+
+/// Write a type to the memory of a remote process
+pub trait Write {
+    fn write(&self, handle: Handle, addr: u32) -> Result<(), String>;
+}
+
+impl Write for f32 {
+    fn write(&self, handle: Handle, addr: u32) -> Result<(), String> {
+        let raw: [u8; 4] = unsafe { std::mem::transmute(*self) };
+        write(handle, addr, &raw[..])
+    }
+}
+
 /// Find the first process having the given name and return its PID
 pub fn find(name: &str) -> Option<Pid> {
     unsafe {

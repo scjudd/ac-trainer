@@ -21,8 +21,8 @@ pub const PLAYER_ARMOR_OFFSET: isize = 0xFC;
 pub const PLAYER_NAME_OFFSET: isize = 0x225;
 pub const PLAYER_NAME_SIZE: usize = 16;
 
-impl proc::Read for Player {
-    fn read(handle: proc::Handle, addr: u32) -> Result<Player, String> {
+impl Read for Player {
+    fn read(handle: proc::Handle, addr: proc::Address) -> Result<Player, String> {
         let x = f32::read(handle, addr + PLAYER_X_OFFSET as u32)?;
         let y = f32::read(handle, addr + PLAYER_Y_OFFSET as u32)?;
         let z = f32::read(handle, addr + PLAYER_Z_OFFSET as u32)?;
@@ -34,6 +34,7 @@ impl proc::Read for Player {
             .take_while(|&c| *c != 0)
             .copied()
             .collect::<Vec<u8>>();
+
         let name = String::from_utf8(name_bytes)
             .map_err(|_| String::from("invalid utf8 data in player name string"))?;
 
@@ -49,12 +50,12 @@ impl proc::Read for Player {
 }
 
 pub fn player_list(handle: proc::Handle) -> Result<Vec<Player>, String> {
-    let list_addr = u32::read(handle, 0x50f4f8)?;
+    let list_addr = proc::Address::read(handle, 0x50f4f8)?;
     let list_length = u32::read(handle, 0x50f500)? as usize;
     let mut list = Vec::with_capacity(list_length);
 
     for index in 0..list_length {
-        let player_addr = u32::read(handle, list_addr + (index as u32 * 0x4))?;
+        let player_addr = proc::Address::read(handle, list_addr + (index as u32 * 0x4))?;
 
         // When entities are removed, their entity list pointer is set to null, but the remaining
         // entities are not moved.

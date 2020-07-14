@@ -43,7 +43,7 @@ fn main() {
 fn run_once(handle: proc::Handle) {
     print_header();
 
-    let my_addr = u32::read(handle, 0x50f4f4).expect("failed to read player pointer");
+    let my_addr = proc::Address::read(handle, 0x50f4f4).expect("failed to read player pointer");
     let me = Player::read(handle, my_addr).expect("failed to read player entity");
     print_player(&me);
 

@@ -27,7 +27,7 @@ fn run_once(handle: proc::Handle) {
         return;
     }
 
-    let my_addr = u32::read(handle, 0x50f4f4).expect("failed to read player pointer");
+    let my_addr = proc::Address::read(handle, 0x50f4f4).expect("failed to read player pointer");
     let me = Player::read(handle, my_addr).expect("failed to read player entity");
 
     // Don't aim while dead: it's awkward.
@@ -73,7 +73,7 @@ fn calc_angle(src: &Player, dst: &Player) -> Angle {
     Angle { yaw, pitch }
 }
 
-fn aim(handle: proc::Handle, player_addr: u32, angle: &Angle) {
+fn aim(handle: proc::Handle, player_addr: proc::Address, angle: &Angle) {
     angle
         .yaw
         .write(handle, player_addr + entities::PLAYER_YAW_OFFSET as u32)

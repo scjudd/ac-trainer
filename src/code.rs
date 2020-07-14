@@ -24,7 +24,7 @@ pub fn godmode() -> InjectionSpec {
 }
 
 pub struct InjectionSpec {
-    original_addr: u32,
+    original_addr: proc::Address,
     original_code: Vec<u8>,
     new_code: Vec<u8>,
 }
@@ -52,9 +52,9 @@ impl InjectionSpec {
 }
 
 pub struct Injection {
-    original_addr: u32,
+    original_addr: proc::Address,
     original_code: Vec<u8>,
-    new_code_addr: u32,
+    new_code_addr: proc::Address,
 }
 
 impl Injection {
@@ -69,7 +69,7 @@ impl Injection {
     }
 }
 
-fn jmp(src: u32, dst: u32) -> [u8; JMP_LEN] {
+fn jmp(src: proc::Address, dst: proc::Address) -> [u8; JMP_LEN] {
     let offset = dst as i32 - (src as i32 + JMP_LEN as i32);
     let offset: [u8; 4] = unsafe { std::mem::transmute(offset) };
     [0xe9, offset[0], offset[1], offset[2], offset[3]]

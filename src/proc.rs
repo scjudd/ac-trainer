@@ -4,30 +4,31 @@ use crate::winapi;
 
 pub type Pid = winapi::DWORD;
 pub type Handle = winapi::HANDLE;
+pub type Address = u32;
 
 /// Read a type from the memory of a remote process
 pub trait Read {
-    fn read(handle: Handle, addr: u32) -> Result<Self, String>
+    fn read(handle: Handle, addr: Address) -> Result<Self, String>
     where
         Self: Sized;
 }
 
 impl Read for u32 {
-    fn read(handle: Handle, addr: u32) -> Result<u32, String> {
+    fn read(handle: Handle, addr: Address) -> Result<u32, String> {
         let raw = read(handle, addr, std::mem::size_of::<u32>())?;
         unsafe { Ok(*(raw.as_ptr() as *const u32)) }
     }
 }
 
 impl Read for i32 {
-    fn read(handle: Handle, addr: u32) -> Result<i32, String> {
+    fn read(handle: Handle, addr: Address) -> Result<i32, String> {
         let raw = read(handle, addr, std::mem::size_of::<i32>())?;
         unsafe { Ok(*(raw.as_ptr() as *const i32)) }
     }
 }
 
 impl Read for f32 {
-    fn read(handle: Handle, addr: u32) -> Result<f32, String> {
+    fn read(handle: Handle, addr: Address) -> Result<f32, String> {
         let raw = read(handle, addr, std::mem::size_of::<f32>())?;
         unsafe { Ok(*(raw.as_ptr() as *const f32)) }
     }
@@ -35,11 +36,11 @@ impl Read for f32 {
 
 /// Write a type to the memory of a remote process
 pub trait Write {
-    fn write(&self, handle: Handle, addr: u32) -> Result<(), String>;
+    fn write(&self, handle: Handle, addr: Address) -> Result<(), String>;
 }
 
 impl Write for f32 {
-    fn write(&self, handle: Handle, addr: u32) -> Result<(), String> {
+    fn write(&self, handle: Handle, addr: Address) -> Result<(), String> {
         let raw: [u8; 4] = unsafe { std::mem::transmute(*self) };
         write(handle, addr, &raw[..])
     }
@@ -109,7 +110,7 @@ pub fn still_active(handle: Handle) -> Result<bool, String> {
 }
 
 /// Read memory from a remote process
-pub fn read(handle: Handle, addr: u32, size: usize) -> Result<Vec<u8>, String> {
+pub fn read(handle: Handle, addr: Address, size: usize) -> Result<Vec<u8>, String> {
     let mut data = Vec::with_capacity(size);
     let mut read: winapi::SIZE_T = 0;
 
@@ -136,7 +137,7 @@ pub fn read(handle: Handle, addr: u32, size: usize) -> Result<Vec<u8>, String> {
 }
 
 /// Write memory to a remote process
-pub fn write(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
+pub fn write(handle: Handle, addr: Address, data: &[u8]) -> Result<(), String> {
     let mut written: winapi::SIZE_T = 0;
 
     unsafe {
@@ -158,7 +159,7 @@ pub fn write(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
 }
 
 /// Write memory to a remote process, making sure to handle memory protection setting/resetting
-pub fn write_protected(handle: Handle, addr: u32, data: &[u8]) -> Result<(), String> {
+pub fn write_protected(handle: Handle, addr: Address, data: &[u8]) -> Result<(), String> {
     let mut old_protection: winapi::DWORD = 0;
 
     let ok = unsafe {
@@ -197,7 +198,7 @@ pub fn write_protected(handle: Handle, addr: u32, data: &[u8]) -> Result<(), Str
 }
 
 /// Allocate memory in a remote process
-pub fn alloc_ex(handle: Handle, len: usize) -> Result<u32, String> {
+pub fn alloc_ex(handle: Handle, len: usize) -> Result<Address, String> {
     let addr = unsafe {
         winapi::VirtualAllocEx(
             handle,
@@ -213,5 +214,5 @@ pub fn alloc_ex(handle: Handle, len: usize) -> Result<u32, String> {
         return Err(format!("VirtualAllocEx error: {}", errno));
     }
 
-    Ok(addr as u32)
+    Ok(addr as Address)
 }

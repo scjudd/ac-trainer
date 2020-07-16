@@ -1,6 +1,7 @@
 //! Safe abstractions over the Windows API for interacting with remote processes
 
 use crate::winapi;
+use crate::winapi_error;
 
 pub type Pid = winapi::DWORD;
 pub type Handle = winapi::HANDLE;
@@ -57,11 +58,11 @@ pub fn find(name: &str) -> Option<Pid> {
 
         loop {
             if ok == 0 {
-                let errno = winapi::GetLastError();
-                if errno == winapi::ERROR_NO_MORE_FILES {
+                let err = winapi_error::last();
+                if err.number == winapi::ERROR_NO_MORE_FILES {
                     return None;
                 }
-                panic!("unexpected Process32(First|Next) error: {}", errno);
+                panic!("unexpected Process32(First|Next) error: {}", err.to_string());
             }
 
             let exe = std::ffi::CStr::from_ptr(&proc.szExeFile as *const winapi::CHAR);
@@ -79,8 +80,8 @@ pub fn open(pid: Pid) -> Result<Handle, String> {
     unsafe {
         let handle = winapi::OpenProcess(winapi::PROCESS_ALL_ACCESS, 0, pid);
         if handle == std::ptr::null_mut() {
-            let errno = winapi::GetLastError();
-            return Err(format!("OpenProcess error: {}", errno));
+            let err = winapi_error::last();
+            return Err(format!("OpenProcess error: {}", err.to_string()));
         }
         Ok(handle)
     }
@@ -90,8 +91,8 @@ pub fn open(pid: Pid) -> Result<Handle, String> {
 pub fn close(handle: Handle) -> Result<(), String> {
     unsafe {
         if winapi::CloseHandle(handle) == 0 {
-            let errno = winapi::GetLastError();
-            return Err(format!("CloseHandle error: {}", errno));
+            let err = winapi_error::last();
+            return Err(format!("CloseHandle error: {}", err.to_string()));
         }
         Ok(())
     }
@@ -102,8 +103,8 @@ pub fn still_active(handle: Handle) -> Result<bool, String> {
     unsafe {
         let mut exit_code: winapi::DWORD = 0;
         if winapi::GetExitCodeProcess(handle, &mut exit_code as winapi::LPDWORD) == 0 {
-            let errno = winapi::GetLastError();
-            return Err(format!("GetExitCodeProcess error: {}", errno));
+            let err = winapi_error::last();
+            return Err(format!("GetExitCodeProcess error: {}", err.to_string()));
         }
         Ok(exit_code == winapi::STILL_ACTIVE)
     }
@@ -124,8 +125,8 @@ pub fn read(handle: Handle, addr: Address, size: usize) -> Result<Vec<u8>, Strin
         );
 
         if ok == 0 {
-            let errno = winapi::GetLastError();
-            return Err(format!("ReadProcessMemory error: {}", errno));
+            let err = winapi_error::last();
+            return Err(format!("ReadProcessMemory error: {}", err.to_string()));
         }
 
         // Because we are directly writing to the Vec's internal buffer, we have to manually update
@@ -150,8 +151,8 @@ pub fn write(handle: Handle, addr: Address, data: &[u8]) -> Result<(), String> {
         );
 
         if ok == 0 {
-            let errno = winapi::GetLastError();
-            return Err(format!("WriteProcessMemory error: {}", errno));
+            let err = winapi_error::last();
+            return Err(format!("WriteProcessMemory error: {}", err.to_string()));
         }
     }
 
@@ -173,8 +174,8 @@ pub fn write_protected(handle: Handle, addr: Address, data: &[u8]) -> Result<(),
     };
 
     if ok == 0 {
-        let errno = unsafe { winapi::GetLastError() };
-        return Err(format!("VirtualProtectEx error: {}", errno));
+        let err = winapi_error::last();
+        return Err(format!("VirtualProtectEx error: {}", err.to_string()));
     }
 
     write(handle, addr, data)?;
@@ -190,8 +191,8 @@ pub fn write_protected(handle: Handle, addr: Address, data: &[u8]) -> Result<(),
     };
 
     if ok == 0 {
-        let errno = unsafe { winapi::GetLastError() };
-        return Err(format!("VirtualProtectEx error: {}", errno));
+        let err = winapi_error::last();
+        return Err(format!("VirtualProtectEx error: {}", err.to_string()));
     }
 
     Ok(())
@@ -210,8 +211,8 @@ pub fn alloc_ex(handle: Handle, len: usize) -> Result<Address, String> {
     };
 
     if addr == std::ptr::null_mut() {
-        let errno = unsafe { winapi::GetLastError() };
-        return Err(format!("VirtualAllocEx error: {}", errno));
+        let err = winapi_error::last();
+        return Err(format!("VirtualAllocEx error: {}", err.to_string()));
     }
 
     Ok(addr as Address)

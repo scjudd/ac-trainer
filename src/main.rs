@@ -3,6 +3,7 @@ mod code;
 mod entities;
 mod proc;
 mod winapi;
+mod winapi_error;
 
 use entities::Player;
 use proc::Read;

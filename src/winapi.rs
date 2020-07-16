@@ -8,6 +8,7 @@
 
 pub type c_char = i8;
 pub type c_short = i16;
+pub type c_ushort = u16;
 pub type c_int = i32;
 pub type c_long = i32;
 pub type c_ulong = u32;
@@ -23,9 +24,14 @@ pub type LPDWORD = *mut DWORD;
 pub type LPVOID = *mut c_void;
 pub type LPCVOID = *const c_void;
 pub type SHORT = c_short;
+pub type USHORT = c_ushort;
 pub type SIZE_T = ULONG_PTR;
 pub type HANDLE = *mut c_void;
+pub type HLOCAL = HANDLE;
 pub type LPPROCESSENTRY32 = *mut PROCESSENTRY32;
+pub type LANGID = USHORT;
+pub type LPSTR = *mut CHAR;
+pub type va_list = *mut c_char;
 
 pub const TH32CS_SNAPPROCESS: DWORD = 0x00000002;
 
@@ -43,6 +49,13 @@ pub const MEM_COMMIT: DWORD = 0x1000;
 pub const MEM_RESERVE: DWORD = 0x2000;
 
 pub const PAGE_EXECUTE_READWRITE: DWORD = 0x40;
+
+pub const FORMAT_MESSAGE_FROM_SYSTEM: DWORD = 0x00001000;
+pub const FORMAT_MESSAGE_ALLOCATE_BUFFER: DWORD = 0x00000100;
+pub const FORMAT_MESSAGE_IGNORE_INSERTS: DWORD = 0x00000200;
+
+pub const LANG_NEUTRAL: USHORT = 0x00;
+pub const SUBLANG_DEFAULT: USHORT = 0x01;
 
 #[repr(C)]
 pub struct PROCESSENTRY32 {
@@ -95,4 +108,20 @@ extern "system" {
         flNewProtect: DWORD,
         lpflOldProtect: PDWORD,
     ) -> BOOL;
+    pub fn FormatMessageA(
+        dwFlags: DWORD,
+        lpSource: LPCVOID,
+        dwMessageId: DWORD,
+        dwLanguageId: DWORD,
+        lpBuffer: LPSTR,
+        nSize: DWORD,
+        Arguments: *mut va_list,
+    ) -> DWORD;
+    pub fn LocalFree(hMem: HLOCAL) -> HLOCAL;
+}
+
+/// Creates a language identifier from a primary language identifier and a sublanguage identifier.
+#[inline]
+pub fn MAKELANGID(p: USHORT, s: USHORT) -> LANGID {
+    (s << 10) | p
 }

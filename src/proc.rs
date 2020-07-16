@@ -62,7 +62,10 @@ pub fn find(name: &str) -> Option<Pid> {
                 if err.number == winapi::ERROR_NO_MORE_FILES {
                     return None;
                 }
-                panic!("unexpected Process32(First|Next) error: {}", err.to_string());
+                panic!(
+                    "unexpected Process32(First|Next) error: {}",
+                    err.to_string()
+                );
             }
 
             let exe = std::ffi::CStr::from_ptr(&proc.szExeFile as *const winapi::CHAR);

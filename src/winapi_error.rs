@@ -11,50 +11,35 @@ pub fn last() -> Error {
 }
 
 /// Retrieve the error message associated with a given error number
-///
-/// The message is copied into an owned String and returned to the caller. All temporary
-/// allocations by the Windows API functions are accounted for and freed before the function
-/// returns.
 fn message(number: winapi::DWORD) -> String {
-    let mut flags = 0;
-    flags |= winapi::FORMAT_MESSAGE_FROM_SYSTEM;
-    flags |= winapi::FORMAT_MESSAGE_ALLOCATE_BUFFER;
-    flags |= winapi::FORMAT_MESSAGE_IGNORE_INSERTS;
+    unsafe {
+        let flags = winapi::FORMAT_MESSAGE_FROM_SYSTEM
+            | winapi::FORMAT_MESSAGE_ALLOCATE_BUFFER
+            | winapi::FORMAT_MESSAGE_IGNORE_INSERTS;
 
-    let lang_id = winapi::MAKELANGID(winapi::LANG_NEUTRAL, winapi::SUBLANG_DEFAULT) as u32;
+        let lang_id = winapi::MAKELANGID(winapi::LANG_NEUTRAL, winapi::SUBLANG_DEFAULT) as u32;
 
-    let mut buf_ptr: *mut _ = std::ptr::null_mut();
+        let mut winapi_allocated_buffer = std::ptr::null_mut();
 
-    let size = unsafe {
-        winapi::FormatMessageA(
+        let size = winapi::FormatMessageA(
             flags,
             std::ptr::null(),
             number,
             lang_id,
-            &mut buf_ptr as *mut _ as winapi::LPSTR,
+            &mut winapi_allocated_buffer as *mut _ as winapi::LPSTR,
             0,
             std::ptr::null_mut(),
-        )
-    };
+        ) as usize;
 
-    let message_slice = unsafe {
-        std::slice::from_raw_parts(buf_ptr as *const u8, size as usize)
-    };
-
-    let message = {
-        let bytes = message_slice
+        let copied = std::slice::from_raw_parts(winapi_allocated_buffer as *const u8, size)
             .iter()
             .copied()
-            .collect::<Vec<u8>>();
+            .collect();
 
-        String::from_utf8(bytes).expect("invalid utf8 data in winapi error message")
-    };
+        winapi::LocalFree(winapi_allocated_buffer);
 
-    unsafe {
-        winapi::LocalFree(buf_ptr as *mut _);
+        String::from_utf8(copied).expect("invalid utf8 data in winapi error message")
     }
-
-    message
 }
 
 #[derive(Debug)]

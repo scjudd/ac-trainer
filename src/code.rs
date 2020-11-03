@@ -31,6 +31,10 @@ pub struct InjectionSpec {
 
 impl InjectionSpec {
     pub fn inject(self, handle: proc::Handle) -> Result<Injection, String> {
+        if self.original_code.len() < JMP_LEN {
+            return Err(format!("original_code must be at least {} bytes long", JMP_LEN))
+        }
+
         let new_code_addr = proc::alloc_ex(handle, self.new_code.len())?;
 
         let mut new_code = self.new_code;
